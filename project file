@@ -1,8 +1,10 @@
-﻿#include <queue>
+#include <queue>
 #include "Image_Class.h"
 #include <algorithm>
 #include <cmath>
-
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 using namespace std;
 
 
@@ -267,32 +269,78 @@ void darken_lighten_Filter(Image& image, int m) {
     }
     cout << ((m == 1) ? "Lighten" : "Darken") << " Filter applied successfully." << endl;
 }
+// 2- gaussian filter (blur)
+void SeparableGaussianBlur(Image& image, int kernelSize, double sigma) {
 
-void blur_filter(Image& image) {
-    Image temp = image;  // keep original copy
-    int kernelSize = 5;  // 5x5 blur (stronger than 3x3)
-    int offset = kernelSize / 2;
+    int radius = kernelSize / 2;
 
-    for (int y = offset; y < image.height - offset; ++y) {
-        for (int x = offset; x < image.width - offset; ++x) {
-            unsigned int sumR = 0, sumG = 0, sumB = 0;
+    // Build 1D Gaussian kernel
+    vector<double> kernel(kernelSize);
+    double sum = 0.0;
+    double denom = 2.0 * sigma * sigma;
 
-            for (int ky = -offset; ky <= offset; ++ky) {
-                for (int kx = -offset; kx <= offset; ++kx) {
-                    sumR += temp(x + kx, y + ky, 0);
-                    sumG += temp(x + kx, y + ky, 1);
-                    sumB += temp(x + kx, y + ky, 2);
-                }
+    for (int i = -radius; i <= radius; ++i) {
+        double value = exp(-(i * i) / denom);
+        kernel[i + radius] = value;
+        sum += value;
+    }
+    for (int i = 0; i < kernelSize; ++i)
+        kernel[i] /= sum;
+
+    Image temp(image.width, image.height);
+
+    // Horizontal pass
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; ++x) {
+            double sumR = 0.0, sumG = 0.0, sumB = 0.0;
+
+            for (int k = -radius; k <= radius; ++k) {
+                int sx = std::clamp(x + k, 0, image.width - 1);
+
+                unsigned char r = image.getPixel(sx, y, 0);
+                unsigned char g = image.getPixel(sx, y, 1);
+                unsigned char b = image.getPixel(sx, y, 2);
+
+                double kv = kernel[k + radius];
+                sumR += r * kv;
+                sumG += g * kv;
+                sumB += b * kv;
             }
 
-            int count = kernelSize * kernelSize;
-            image(x, y, 0) = sumR / count;
-            image(x, y, 1) = sumG / count;
-            image(x, y, 2) = sumB / count;
+            temp.setPixel(x, y, 0, (unsigned char)(clamp(sumR, 0.0, 255.0)));
+            temp.setPixel(x, y, 1, (unsigned char)(clamp(sumG, 0.0, 255.0)));
+            temp.setPixel(x, y, 2, (unsigned char)(clamp(sumB, 0.0, 255.0)));
         }
     }
-}
 
+    Image out(image.width, image.height);
+
+    // Vertical pass
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; ++x) {
+            double sumR = 0.0, sumG = 0.0, sumB = 0.0;
+
+            for (int k = -radius; k <= radius; ++k) {
+                int sy = clamp(y + k, 0, image.height - 1);
+
+                unsigned char r = temp.getPixel(x, sy, 0);
+                unsigned char g = temp.getPixel(x, sy, 1);
+                unsigned char b = temp.getPixel(x, sy, 2);
+
+                double kv = kernel[k + radius];
+                sumR += r * kv;
+                sumG += g * kv;
+                sumB += b * kv;
+            }
+
+            out.setPixel(x, y, 0, (unsigned char)(clamp(sumR, 0.0, 255.0)));
+            out.setPixel(x, y, 1, (unsigned char)(clamp(sumG, 0.0, 255.0)));
+            out.setPixel(x, y, 2, (unsigned char)(clamp(sumB, 0.0, 255.0)));
+        }
+    }
+    image = out;
+    cout << "Separable Gaussian Blur applied successfully." << endl;
+}
 void warm_image(Image& image) {
     for (int y = 0; y < image.height; ++y) {
         for (int x = 0; x < image.width; ++x) {
@@ -311,6 +359,50 @@ void warm_image(Image& image) {
         }
     }
     cout << "warm filter applied successfully." << endl;
+}
+void infrared_filter(Image& image) {
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; ++x) {
+            int r = image(x, y, 0);
+            int g = image(x, y, 1);
+            int b = image(x, y, 2);
+
+            // Boost red, reduce others
+            r = min(255, int(r * 1.5));
+            g = int(g * 0.5);
+            b = int(b * 0.2);
+
+            image(x, y, 0) = r;
+            image(x, y, 1) = g;
+            image(x, y, 2) = b;
+        }
+    }
+    cout << "Infrared filter applied successfully." << endl;
+}
+void purple_filter(Image& image) {
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; ++x) {
+
+            unsigned char r = image(x, y, 0);
+            unsigned char g = image(x, y, 1);
+            unsigned char b = image(x, y, 2);
+
+            int new_r = (int)r + 40;
+            int new_g = (int)g - 30;
+            int new_b = (int)b + 60;
+
+
+            r = (unsigned char)std::min(255, std::max(0, new_r));
+            g = (unsigned char)std::min(255, std::max(0, new_g));
+            b = (unsigned char)std::min(255, std::max(0, new_b));
+
+
+            image(x, y, 0) = r;
+            image(x, y, 1) = g;
+            image(x, y, 2) = b;
+        }
+    }
+    cout << "Purple filter applied successfully." << endl;
 }
 // Helper function to save an image
 bool save_image(Image& image) {
@@ -359,6 +451,8 @@ int main() {
         cout << "11: Resize Image Filter\n";
         cout << "12: Blur Image Filter\n";
         cout << "13: Warm Image Filter\n";
+        cout << "14: Infrared Image Filter\n";
+        cout << "15: Purple Image Filter\n";
         cout << "Enter Filter Number: ";
 
 
@@ -488,7 +582,7 @@ int main() {
 
         }
         case 12: {
-            blur_filter(myImage);
+            SeparableGaussianBlur(myImage, 21, 10.0);
             if (!save_image(myImage)) return 1;
             break;
         }
@@ -497,11 +591,20 @@ int main() {
             if (!save_image(myImage)) return 1;
             break;
         }
+        case 14: {
+            infrared_filter(myImage);
+            if (!save_image(myImage)) return 1;
+            break;
+        }
+        case 15: {
+            purple_filter(myImage);
+            if (!save_image(myImage)) return 1;
+            break;
+        }
 
         default:
             cout << "Invalid filter number entered." << endl;
             return 1;
-
 
         }
         string response;
