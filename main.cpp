@@ -4,11 +4,32 @@
 #include <queue>
 using namespace std;
 /*
- *
- *
- *
- *
- *
++-----------+-----------+-----------+
+|                NAME                 |      ID      |                      Work Breakdown                               |
++-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------------+
+|   Ahmed Bakr Abd El Hafez Muhammad  |     No ID    |   Grayscale - Resize - Crop - Frame - Warm (Bouns)                |
++-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------------+
+|   Muhammad Reda Abd El Nabi         |   20240497   |   Blur - Inverted - Darken and lighten - Merge - Purple (Bouns)   |
++-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------------+
+|   Youssef Osama Samy Azmy           |     No ID    |   Black & White - Flip - Rotate - Detect image - Infrared (Bouns) |
++-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+--------------+
+Section: Monday → Slot 12:45-2:15 → Lab5 → S17
+The Link of The Repositories : redacoder005/Project-image
+The Link of The Shared Documents : https://drive.google.com/file/d/1WqlvBGPct8b38dFvuU2WG18nWhAg005e/view?usp=drive_link
+Video Link : https://drive.google.com/file/d/1jCTm-OJkIaNzAaZhHto6cO1SFYm_AIa0/view?usp=drive_link
+--------------------------------------------
+Description:
+    This file contains multiple image processing filters
+    implemented in C++. Each function applies a specific
+    transformation to an input image such as grayscale,
+    black & white, inversion, rotation, cropping, merging,
+    and other effects.
+
+    The filters use the Image_Class.h library to handle
+    pixel manipulation, image loading, and saving.
+
+    This file is part of the Image Filter Project.
+-------------------------------------------------------------
 */
 
 // Grayscale filter
